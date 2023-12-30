@@ -1,42 +1,41 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class Player_Movement : MonoBehaviour
 {
     #region //variables
     public Rigidbody rb;               // taking player's rigid body component reference 
-    public float fspeed;              // forward speed
-    public float jHeight;
+    public float fspeed;               // forward speed
+    public float jHeight;              // jump height length
     bool spacePressed = false;
     bool playerGrounded = false;
+    public MeshRenderer player;
 
-    public GameObject goldCoin;
-    public GameObject silverCoin;
-    public GameObject bronzeCoin;
+    // To store references
+    GameObject goldCoin;             
+    GameObject silverCoin;
+    GameObject bronzeCoin;
 
     float gPDistance;                   // Distance between goldcoin and player;
     float sPDistance;                   // Distance between silvercoin and player;
     float bPDistance;                   // Distance between bronzecoin and player;
 
-    [HideInInspector] public bool selfDestroyGoldCoin;
-    [HideInInspector] public bool selfDestroySilverCoin;
-    [HideInInspector] public bool selfDestroyBronzeCoin;
+    public Swapn_Objects swapnObjects;  // A class
+    public GameUI gameUI;
 
+    bool player_Destroyed = false;       // To pause
 
-    [HideInInspector] public bool goldCoinDestroyed = false;
-    [HideInInspector] public bool silverCoinDestroyed = false;
+    [HideInInspector] public int goldCollections = 0;
+    [HideInInspector] public int silverCollections = 0;
+    [HideInInspector] public int bronzeCollections = 0;
 
-    public Swapn_Objects swapnObjects;
-
-    bool player_Destroyed = false;
+    [HideInInspector] public int goldMissed = 0;
+    [HideInInspector] public int silverMissed = 0;
+    [HideInInspector] public int bronzeMissed = 0;
     #endregion
-    void Start()
-    {
-        
-    }
 
-    
     void Update()
     {
         if (player_Destroyed == true)
@@ -68,34 +67,13 @@ public class Player_Movement : MonoBehaviour
             spacePressed = true;
         }
         #endregion
+     
 
-        #region // destroying collectobles if player ,misses
-        if (this.transform.position.z > -8)
-        {
-            
-            if (swapnObjects.instantiatedGold == true && selfDestroyGoldCoin == false)
-            {
-                CheckDistanceandDestroy_Gold();
-                
-            }
-
-            if (/*swapnObjects.instantiatedSilver == true && */selfDestroySilverCoin == false)
-            {
-                CheckDistanceandDestroy_Silver();
-                
-            }
-
-            if (swapnObjects.instantiatedBronze == true && selfDestroyBronzeCoin == false)
-            {
-                CheckDistanceandDestroy_Bronze();
-               // bronzeCoinDestroyed = true;
-                
-            }
-
-        }
-        #endregion
+        StartCoroutine(Coins_SelfDestory());
 
     }
+
+
 
     void FixedUpdate()
     {
@@ -122,28 +100,38 @@ public class Player_Movement : MonoBehaviour
         #region//Destroying Coins and Player
         if (collision.gameObject.tag == "Wall")
         {
-            Debug.Log("00");
-            Destroy(this.gameObject);
+            //Destroy(this.gameObject);
+            player.gameObject.GetComponent<Renderer>().enabled = false;
             player_Destroyed = true;
-        }
+            gameUI.FinalScores();
+            gameUI.CoinsMissedCount();
+            gameUI.text.SetActive(false);
+            gameUI.gameOverPanel.SetActive(true);
+        } 
+       
 
         if (collision.gameObject.tag == "Gold Coin")
         {
             Destroy(collision.gameObject);
-            goldCoinDestroyed = true;
-            selfDestroyGoldCoin = true;
+            swapnObjects.hasSilverCoinToBeSwapned = true;
+            goldCollections++;
+            gameUI.UpdateGoldCount();
         }
 
         if (collision.gameObject.tag == "Silver Coin")
         {
             Destroy(collision.gameObject);
-            silverCoinDestroyed = true;
+            swapnObjects.hasBronzeCoinToBeSwapned = true;
+            silverCollections++;
+            gameUI.UpdateSilverCount();
         }
 
         if (collision.gameObject.tag == "Bronze Coin")
         {
             Destroy(collision.gameObject);
-            swapnObjects.goldCoinSwapned = false;
+            swapnObjects.hasGoldCoinToBeSwapned = true;
+            bronzeCollections++;
+            gameUI.UpdateBronzeCount();
         }
         #endregion
 
@@ -163,54 +151,74 @@ public class Player_Movement : MonoBehaviour
         
     }
 
-    void CheckDistanceandDestroy_Gold()
-    {
-        goldCoin = GameObject.FindGameObjectWithTag("Gold Coin");
-        gPDistance = this.transform.position.z - goldCoin.transform.position.z;
-        
-        if (gPDistance > 6)
-        {
-            Destroy(goldCoin);
-            goldCoinDestroyed = true;
-            selfDestroyGoldCoin = true;
-            swapnObjects.instantiatedGold = false;
-        }
-        
-    }
+    
+   
 
-    void CheckDistanceandDestroy_Silver()
+    IEnumerator Coins_SelfDestory()
     {
-        if(swapnObjects.instantiatedSilver == true)
+        if (swapnObjects.goldCoinSwapned)
         {
-            silverCoin = GameObject.FindGameObjectWithTag("Silver Coin");
-            sPDistance = this.transform.position.z - silverCoin.transform.position.z;
+            yield return new WaitForSeconds(0.5f);
+            goldCoin = GameObject.FindGameObjectWithTag("Gold Coin");
 
-            if (sPDistance > 6)
+            if(goldCoin != null)
             {
-                Destroy(silverCoin);
-                silverCoinDestroyed = true;
-                selfDestroySilverCoin = true;
-                swapnObjects.instantiatedSilver = false;
+                gPDistance = this.transform.position.z - goldCoin.transform.position.z;
+
+                if (gPDistance > 6)
+                {
+                    Destroy(goldCoin);
+                    swapnObjects.goldCoinSwapned = false;
+                    swapnObjects.hasSilverCoinToBeSwapned = true;
+                    goldMissed++;
+
+
+                }
             }
+            
         }
-        
-    }
 
-    void CheckDistanceandDestroy_Bronze()
-    {
-        bronzeCoin = GameObject.FindGameObjectWithTag("Bronze Coin");
-        bPDistance = this.transform.position.z - bronzeCoin.transform.position.z;
-
-        if (bPDistance > 6)
+        if (swapnObjects.silverCoinSwapned)
         {
-            Destroy(bronzeCoin);
-            selfDestroyBronzeCoin = true;
-            swapnObjects.goldCoinSwapned = false;
-            swapnObjects.instantiatedBronze = false;
+            yield return new WaitForSeconds(0.5f);
+            silverCoin = GameObject.FindGameObjectWithTag("Silver Coin");
+
+            if(silverCoin != null)
+            {
+                sPDistance = this.transform.position.z - silverCoin.transform.position.z;
+
+                if (sPDistance > 6)
+                {
+                    Destroy(silverCoin);
+                    swapnObjects.hasBronzeCoinToBeSwapned = true;
+                    swapnObjects.silverCoinSwapned = false;
+                    silverMissed++;
+                }
+            }
+            
+        }
+
+        if (swapnObjects.bronzeCoinSwapned)
+        {
+            yield return new WaitForSeconds(0.5f);
+            bronzeCoin = GameObject.FindGameObjectWithTag("Bronze Coin"); 
+
+            if(bronzeCoin != null)
+            {
+                bPDistance = this.transform.position.z - bronzeCoin.transform.position.z;
+
+                if (bPDistance > 6)
+                {
+                    Destroy(bronzeCoin);
+                    swapnObjects.hasGoldCoinToBeSwapned = true;
+                    swapnObjects.bronzeCoinSwapned = false;
+                    bronzeMissed++;
+                }
+            }
+            
         }
     }
 
- 
-
+    
 
 }

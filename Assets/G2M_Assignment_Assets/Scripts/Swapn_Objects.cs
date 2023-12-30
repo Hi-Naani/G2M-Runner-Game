@@ -10,17 +10,28 @@ public class Swapn_Objects : MonoBehaviour
     public int[] numbers;
 
     public GameObject goldCoin;
-    GameObject goldCoinSearch;
-    [HideInInspector]public bool goldCoinSwapned = false;
-
-
     public GameObject silverCoin;
-
     public GameObject bronzeCoin;
+
+    //GameObject goldCoinSearch;
+    //[HideInInspector]public bool goldCoinSwapned = false;
+
+
+
 
     [HideInInspector] public bool instantiatedGold = false;
     [HideInInspector] public bool instantiatedSilver = false;
     [HideInInspector] public bool instantiatedBronze = false;
+
+    #region // Swapning Coins Variables
+    [HideInInspector] public bool hasGoldCoinToBeSwapned = true;
+    [HideInInspector] public bool hasSilverCoinToBeSwapned = false;
+    [HideInInspector] public bool hasBronzeCoinToBeSwapned = false;
+
+    [HideInInspector] public bool goldCoinSwapned = false;
+    [HideInInspector] public bool silverCoinSwapned = false;
+    [HideInInspector] public bool bronzeCoinSwapned = false;
+    #endregion
 
 
     void Start()
@@ -31,7 +42,7 @@ public class Swapn_Objects : MonoBehaviour
     
     void Update()
     {
-        if (goldCoinSwapned == false)
+       /* if (goldCoinSwapned == false)
         {
             
             if (player.transform.position.z > -10 && GameObject.FindGameObjectWithTag("Gold Coin") == null)
@@ -73,7 +84,28 @@ public class Swapn_Objects : MonoBehaviour
 
             }
             
-        }
+        }*/
+
+        if(player.transform.position.z > -10)
+        {
+            if(hasGoldCoinToBeSwapned)
+            {
+                Invoke("InstantiateGoldCoin", 0f);
+                goldCoinSwapned = true;
+            }
+
+            if (hasSilverCoinToBeSwapned)
+            {
+                Invoke("InstantiateSilverCoin", 0f);
+                silverCoinSwapned = true;
+            }
+
+            if (hasBronzeCoinToBeSwapned)
+            {
+                Invoke("InstantiateBronzeCoin", 0f);
+                bronzeCoinSwapned = true;
+            }
+        }             
 
     }
 
@@ -81,20 +113,21 @@ public class Swapn_Objects : MonoBehaviour
     {
         //int[] numbers = { -2, 0, 2 };
         int randomNumber_gold = numbers[Random.Range(0, numbers.Length)];
-        //Debug.Log(randomNumber_gold);
         Instantiate(goldCoin, new Vector3(randomNumber_gold, 0.5f, player.transform.position.z + 5)/*player.transform.position + new Vector3(randomNumber, 0.5f, 5)*/, goldCoin.transform.rotation);
+        hasGoldCoinToBeSwapned = false;
     }
 
     void InstantiateSilverCoin()
     {
         int randomNumber_Silver = numbers[Random.Range(0, numbers.Length)];
         Instantiate(silverCoin, new Vector3(randomNumber_Silver, 0.35f, player.transform.position.z + 5), silverCoin.transform.rotation);
+        hasSilverCoinToBeSwapned = false;
     }
 
     void InstantiateBronzeCoin()
     {
         int randomNumber_Bronze = numbers[Random.Range(0, numbers.Length)];
-        //Debug.Log(randomNumber_Bronze);
         Instantiate(bronzeCoin, new Vector3(randomNumber_Bronze, 0.5f, player.transform.position.z + 5), bronzeCoin.transform.rotation);
+        hasBronzeCoinToBeSwapned = false;
     }
 }
