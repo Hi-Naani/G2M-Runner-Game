@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -12,10 +13,10 @@ public class GameUI : MonoBehaviour
     public Text goldCountPicked, silverCountPicked, bronzeCountPicked;
     public Text goldCountMissed, silverCountMissed, bronzeCountMissed;
 
-    private void Awake()
+    private void Start()
     {
-        text.SetActive(true);
-        gameOverPanel.SetActive(false);
+        StartCoroutine(StartPanel());
+        //gameOverPanel.SetActive(false);
     }
 
     public void UpdateGoldCount()
@@ -46,6 +47,13 @@ public class GameUI : MonoBehaviour
         goldCountMissed.text = playerMovement.goldMissed.ToString();
         silverCountMissed.text = playerMovement.silverMissed.ToString();
         bronzeCountMissed.text = playerMovement.bronzeMissed.ToString();
+    }
+
+    IEnumerator StartPanel()
+    {
+        yield return new WaitForSeconds(3);
+        text.SetActive(true);
+        yield return null;
     }
 
 }
